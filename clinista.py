@@ -1,5 +1,4 @@
 import argparse
-import os
 from datetime import datetime
 
 def get_timestamped_filename(postfix="firefox"):
