@@ -1,22 +1,29 @@
 import os
 import sys
 import glob
+import platform
 from pathlib import Path
 
-
 def find_firefox_profiles():
-    # Detect OS and set Firefox profiles path
-    if sys.platform == "win32":
-        base_path = Path(os.getenv("APPDATA")) / "Mozilla" / "Firefox" / "Profiles"
-    elif sys.platform == "darwin":
-        base_path = Path.home() / "Library" / "Application Support" / "Firefox" / "Profiles"
-    elif sys.platform == "linux":
-        base_path = Path.home() / ".mozilla" / "firefox"
+    if 'microsoft' in platform.release().lower():
+        # Running in WSL
+        windows_username = input("Enter your Windows username: ")
+        profiles_dir = f"/mnt/c/Users/{windows_username}/AppData/Roaming/Mozilla/Firefox/Profiles"
+    elif os.name == 'nt':
+        # Running on Windows
+        appdata = os.getenv('APPDATA')
+        profiles_dir = os.path.join(appdata, 'Mozilla', 'Firefox', 'Profiles')
     else:
-        print("Unsupported OS")
-        return None
+        # Running on Linux or macOS
+        home = os.path.expanduser('~')
+        profiles_dir = os.path.join(home, '.mozilla', 'firefox')
 
-    profiles = list(base_path.glob("*.default*"))
+    if not os.path.exists(profiles_dir):
+        print(f"Firefox profiles directory not found at: {profiles_dir}")
+        sys.exit(1)
+
+    profiles_path = Path(profiles_dir)
+    profiles = list(profiles_path.glob("*"))
     return profiles
 
 

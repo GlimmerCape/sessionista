@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
+import traceback
 import json
 
 class BrowserSessionViewer(tk.Tk):
@@ -50,7 +51,8 @@ class BrowserSessionViewer(tk.Tk):
                     data = json.load(file)
                 self.populate_treeview(data)
             except Exception as e:
-                messagebox.showerror("Error", f"Failed to load file:\n{e}\n{e.__traceback__.tb_next.tb_lineno}")
+                error_message = f"Failed to load file:\n{e}\n\nStack trace:\n{traceback.format_exc()}"
+                messagebox.showerror("Error", error_message)
 
     def populate_treeview(self, data):
         self.tree.delete(*self.tree.get_children())  # Clear existing data
