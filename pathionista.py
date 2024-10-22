@@ -28,21 +28,35 @@ def find_firefox_profiles():
 
 
 def ask_profile(profiles):
+    if not profiles:
+        print("No Firefox profiles found.")
+        return None
+
     print("Available Firefox Profiles:")
     for i, profile in enumerate(profiles):
-        print(f"{i + 1}: {profile}")
+        profile_name = os.path.basename(profile)
+        session_dir = os.path.join(profile, 'sessionstore-backups')
+        session_files = []
 
-    # Ask user to select a profile
+        if os.path.isdir(session_dir):
+            for fname in os.listdir(session_dir):
+                fpath = os.path.join(session_dir, fname)
+                if os.path.isfile(fpath):
+                    session_files.append(fpath)
+
+        num_sessions = len(session_files)
+
+        print(f"{i + 1}: {profile_name}")
+        print(f"   Number of session files: {num_sessions}")
     while True:
         try:
             choice = int(input("Enter the profile number: ")) - 1
             if 0 <= choice < len(profiles):
                 return profiles[choice]
             else:
-                print("Invalid selection, please choose again.")
+                print("Invalid selection, please choose a number between 1 and", len(profiles))
         except ValueError:
             print("Please enter a valid number.")
-
 
 def find_session_files(profile_path):
     session_files = glob.glob(str(profile_path / "sessionstore-backups" / "*.jsonlz4"))
