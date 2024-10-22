@@ -1,0 +1,4 @@
+- [ ] search with highlighting
+- [ ] filtering
+- [ ] session preview
+- [ ] vim like keyboard controls
