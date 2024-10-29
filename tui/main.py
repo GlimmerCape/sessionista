@@ -1,9 +1,12 @@
 import json
 import re
 import sys
+import random
 from textual.app import App, ComposeResult
-from textual.widgets import Tree
+from textual.widgets import Tree, Input
 from textual.reactive import reactive
+from textual.binding import Binding
+from textual.events import Key
 
 class JsonTreeView(Tree):
     def __init__(self, json_path):
@@ -13,6 +16,11 @@ class JsonTreeView(Tree):
         self.search_results = []
         self.current_search_index = 0
         self.load_json_tree()
+
+    def compose(self) -> ComposeResult:
+        self.search_input = Input(placeholder="Search for: ")
+        self.search_input.visible = False
+        yield self.search_input
 
     def load_json_tree(self):
         with open(self.json_path) as json_file:
@@ -32,10 +40,19 @@ class JsonTreeView(Tree):
             tree.root.add(f"{data}") if parent is None else parent.add(f"{data}")
 
     # Search actions
-    def search(self):
-        self.search_term = input("Enter search term: ")
+    def focus_on_search_input(self):
+        if self.search_input.visible:
+            self.search_input.visible = False
+            self.focus()
+        else:
+            self.search_input.visible = True
+            self.search_input.focus()
+
+    def run_search(self):
         self.search_results = self.search_nodes(self.root, self.search_term)
         self.current_search_index = 0
+        self.search_input.visible = False
+        self.focus()
         self.move_to_search_result()
 
     def next_match(self):
@@ -60,17 +77,25 @@ class JsonTreeView(Tree):
         if self.search_results:
             self.select_node(self.search_results[self.current_search_index])
 
+    def on_key(self, event: Key) -> None:
+        """Change color on every key press."""
+        # random_color = f"#{random.randint(0, 0xFFFFFF):06x}"
+        # self.styles.scrollbar_color = random_color
+        pass
+
 class JsonTreeApp(App):
     JSON_PATH = reactive("")
 
     BINDINGS = [
-        ("q", "quit", "Quit"),
-        ("zc", "fold_node", "Collapse Node"),
-        ("zo", "unfold_node", "Expand Node"),
-        ("/", "search", "Search"),
-        ("n", "next_match", "Next Match"),
-        ("N", "previous_match", "Previous Match"),
-        ("j", "move_down", "Move Down"),
+        Binding("x", "quit", "Quit"),
+        Binding("l", "expand_current_node", "Expand Node"),
+        Binding("h", "collapse_current_node", "Collapse Node"),
+        Binding("/,s", "focus_on_search_input", "Search Input"),
+        Binding("enter", 'search', "Search"),
+        Binding("n", "next_match", "Next Match"),
+        Binding("N", "previous_match", "Previous Match"),
+        Binding("k", "move_up", "Move Down"),
+        Binding("j", "move_down", "Move Down"),
     ]
 
     def __init__(self, json_path):
@@ -81,15 +106,27 @@ class JsonTreeApp(App):
         self.tree_view = JsonTreeView(self.JSON_PATH)
         yield self.tree_view
 
-    def action_fold_node(self) -> None:
-        self.notify('zc', title='key pressed')
-        self.tree_view.action_toggle_node()
+    def action_expand_current_node(self) -> None:
+        if not self.tree_view.cursor_node: return
+        self.tree_view.cursor_node.expand()
 
-    def action_unfold_node(self) -> None:
-        self.tree_view.action_toggle_node()
+    def action_collapse_current_node(self) -> None:
+        curr_node = self.tree_view.cursor_node 
+        if not curr_node: return
+        if not curr_node.parent: 
+            curr_node.collapse()
+            return
+        if curr_node.is_expanded:
+            curr_node.collapse()
+        else:
+            curr_node.parent.collapse()
+            self.tree_view.select_node(curr_node.parent)
 
     def action_search(self) -> None:
-        self.tree_view.search()
+        self.tree_view.run_search()
+
+    def action_focus_on_search_input(self) -> None:
+        self.tree_view.focus_on_search_input()
 
     def action_next_match(self) -> None:
         self.tree_view.next_match()
@@ -98,9 +135,10 @@ class JsonTreeApp(App):
         self.tree_view.previous_match()
 
     def action_move_down(self) -> None:
-        self.notify('j', title='key-pressed')
-        self.tree_view.action_toggle_node()
         self.tree_view.action_cursor_down()
+
+    def action_move_up(self) -> None:
+        self.tree_view.action_cursor_up()
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
