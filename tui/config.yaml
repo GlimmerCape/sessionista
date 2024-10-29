@@ -1,0 +1,7 @@
+bindings:
+  quit: "q"
+  fold_node: "zc"
+  unfold_node: "zo"
+  search: "/"
+  next_match: "n"
+  previous_match: "N"
