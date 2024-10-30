@@ -4,6 +4,7 @@ import sys
 import random
 from textual.app import App, ComposeResult
 from textual.widgets import Tree, Input
+from textual.widgets.tree import TreeNode
 from textual.reactive import reactive
 from textual.binding import Binding
 from textual.events import Key
@@ -18,7 +19,7 @@ class JsonTreeView(Tree):
         self.load_json_tree()
 
     def compose(self) -> ComposeResult:
-        self.search_input = Input(placeholder="Search for: ")
+        self.search_input = Input(placeholder="Search for: ", value=self.search_term)
         self.search_input.visible = False
         yield self.search_input
 
@@ -49,6 +50,7 @@ class JsonTreeView(Tree):
             self.search_input.focus()
 
     def run_search(self):
+        self.search_term = self.search_input.value
         self.search_results = self.search_nodes(self.root, self.search_term)
         self.current_search_index = 0
         self.search_input.visible = False
@@ -65,20 +67,39 @@ class JsonTreeView(Tree):
             self.current_search_index = (self.current_search_index - 1) % len(self.search_results)
             self.move_to_search_result()
 
-    def search_nodes(self, node, term):
+    def search_nodes(self, node: TreeNode, term: str):
         results = []
-        if re.search(term, node.label, re.IGNORECASE):
+        if node.children and len(node.children) > 0:
+            for child in node.children:
+                if not child: continue
+                results.extend(self.search_nodes(child, term))
+        if not node.label or not node.label.plain: #pyright: ignore[reportAttributeAccessIssue]
+            return results
+        label = node.label.plain #pyright: ignore[reportAttributeAccessIssue]
+        if re.search(term, label, re.IGNORECASE):
             results.append(node)
-        for child in node.children:
-            results.extend(self.search_nodes(child, term))
+            if node.id % 10 == 0:
+                # self.notify(f"{term}, {label}, match")
+                pass
         return results
 
+    def expand_all_parents(self, node):
+        node.expand()
+        if node.parent:
+            self.expand_all_parents(node.parent)
+
     def move_to_search_result(self):
-        if self.search_results:
-            self.select_node(self.search_results[self.current_search_index])
+        if not self.search_results:
+            return
+        next_result = self.search_results[self.current_search_index]
+        self.expand_all_parents(next_result)
+        self.move_cursor(next_result)
+        self.select_node(next_result)
 
     def on_key(self, event: Key) -> None:
         """Change color on every key press."""
+        if event.key == 'enter':
+            self.run_search()
         # random_color = f"#{random.randint(0, 0xFFFFFF):06x}"
         # self.styles.scrollbar_color = random_color
         pass
@@ -87,10 +108,10 @@ class JsonTreeApp(App):
     JSON_PATH = reactive("")
 
     BINDINGS = [
-        Binding("x", "quit", "Quit"),
+        Binding("q", "quit", "Quit"),
         Binding("l", "expand_current_node", "Expand Node"),
         Binding("h", "collapse_current_node", "Collapse Node"),
-        Binding("/,s", "focus_on_search_input", "Search Input"),
+        Binding("/", "focus_on_search_input", "Search Input"),
         Binding("enter", 'search', "Search"),
         Binding("n", "next_match", "Next Match"),
         Binding("N", "previous_match", "Previous Match"),
