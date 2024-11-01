@@ -10,6 +10,7 @@ from textual.binding import Binding
 from textual.events import Key
 
 class JsonTreeView(Tree):
+    CSS_PATH = "app.tcss"
     def __init__(self, json_path):
         super().__init__("JSON Viewer")
         self.json_path = json_path
@@ -55,6 +56,10 @@ class JsonTreeView(Tree):
         self.current_search_index = 0
         self.search_input.visible = False
         self.focus()
+        if len(self.search_results) == 0:
+            self.notify("Nothing was found", timeout=2)
+            return
+        self.expand_and_select_nodes(self.search_results)
         self.move_to_search_result()
 
     def next_match(self):
@@ -69,6 +74,8 @@ class JsonTreeView(Tree):
 
     def search_nodes(self, node: TreeNode, term: str):
         results = []
+        if term == "":
+            return results
         if node.children and len(node.children) > 0:
             for child in node.children:
                 if not child: continue
@@ -83,26 +90,30 @@ class JsonTreeView(Tree):
                 pass
         return results
 
-    def expand_all_parents(self, node):
-        node.expand()
-        if node.parent:
-            self.expand_all_parents(node.parent)
-
     def move_to_search_result(self):
         if not self.search_results:
             return
         next_result = self.search_results[self.current_search_index]
         self.expand_all_parents(next_result)
         self.move_cursor(next_result)
-        self.select_node(next_result)
+
+    def expand_all_parents(self, node: TreeNode):
+        node.expand()
+        if node.parent:
+            self.expand_all_parents(node.parent)
+
+    def expand_and_select_nodes(self, nodes: list[TreeNode]):
+        for node in nodes:
+            self.expand_all_parents(node)
+            self.select_node(node)
 
     def on_key(self, event: Key) -> None:
         """Change color on every key press."""
         if event.key == 'enter':
             self.run_search()
-        # random_color = f"#{random.randint(0, 0xFFFFFF):06x}"
-        # self.styles.scrollbar_color = random_color
-        pass
+        if event.key == 'l':
+            random_color = f"#{random.randint(0, 0xFFFFFF):06x}"
+            self.styles.scrollbar_color = random_color
 
 class JsonTreeApp(App):
     JSON_PATH = reactive("")

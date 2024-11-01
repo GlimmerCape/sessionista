@@ -1,4 +1,6 @@
-- [ ] search with highlighting
+- [X] search
+- [ ] make search fuzzy
 - [ ] filtering
 - [ ] session preview
 - [ ] vim like keyboard controls
+- [ ] marking, deleting content
