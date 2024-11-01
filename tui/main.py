@@ -111,9 +111,9 @@ class JsonTreeView(Tree):
         """Change color on every key press."""
         if event.key == 'enter':
             self.run_search()
-        if event.key == 'l':
-            random_color = f"#{random.randint(0, 0xFFFFFF):06x}"
-            self.styles.scrollbar_color = random_color
+        # if event.key == 'l':
+        #     random_color = f"#{random.randint(0, 0xFFFFFF):06x}"
+        #     self.styles.scrollbar_color = random_color
 
 class JsonTreeApp(App):
     JSON_PATH = reactive("")
