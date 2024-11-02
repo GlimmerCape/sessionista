@@ -1,3 +1,4 @@
+import os
 import json
 import lz4.block
 
@@ -26,8 +27,14 @@ def simplify_session_data(session):
         simplified_data.append(window_data)
     return simplified_data
 
+class FileExistsError(Exception):
+    def __init__(self, message="File already exists. Please choose a different path"):
+        self.message = message
+        super().__init__(self.message)
 
 def save_simplified_session(simplified_data, output_file):
+    if os.path.exists(output_file):
+        raise FileExistsError
     with open(output_file, "w", encoding="utf-8") as f:
         json.dump(simplified_data, f, ensure_ascii=False, indent=2)
 
