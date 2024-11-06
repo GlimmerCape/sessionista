@@ -5,3 +5,4 @@
 - [ ] vim like keyboard controls
 - [ ] marking, deleting content
 - [ ] add options to append to existing file or to overwrite it
+- [ ] hot reloading
