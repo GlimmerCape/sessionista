@@ -7,3 +7,4 @@
 - [ ] add options to append to existing file or to overwrite it
 - [ ] hot reloading
 - [ ] make it possible to fetch session wihtout specifying everything in the world
+- [ ] choosing what windows to save
