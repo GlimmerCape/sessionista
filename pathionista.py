@@ -4,7 +4,7 @@ import glob
 import platform
 from pathlib import Path
 
-def find_firefox_profiles():
+def _find_firefox_profiles():
     if 'microsoft' in platform.release().lower():
         # Running in WSL
         windows_username = input("Enter your Windows username: ")
@@ -27,7 +27,7 @@ def find_firefox_profiles():
     return profiles
 
 
-def ask_profile(profiles):
+def _ask_profile(profiles):
     if not profiles:
         print("No Firefox profiles found.")
         return None
@@ -58,12 +58,12 @@ def ask_profile(profiles):
         except ValueError:
             print("Please enter a valid number.")
 
-def find_session_files(profile_path):
+def _find_session_files(profile_path):
     session_files = glob.glob(str(profile_path / "sessionstore-backups" / "*.jsonlz4"))
     return session_files
 
 
-def ask_session_file(session_files):
+def _ask_session_file(session_files):
     print("\nAvailable session files:")
     for i, file in enumerate(session_files):
         print(f"{i + 1}: {file}")
@@ -81,18 +81,18 @@ def ask_session_file(session_files):
 
 
 def get_session_file():
-    profiles = find_firefox_profiles()
+    profiles = _find_firefox_profiles()
 
     if not profiles:
         print("No Firefox profiles found.")
         return
 
-    selected_profile = ask_profile(profiles)
+    selected_profile = _ask_profile(profiles)
 
-    session_files = find_session_files(selected_profile)
+    session_files = _find_session_files(selected_profile)
 
     if session_files:
-        selected_session = ask_session_file(session_files)
+        selected_session = _ask_session_file(session_files)
         print(f"Selected session file: {selected_session}")
         return selected_session
     else:

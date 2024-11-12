@@ -3,7 +3,7 @@ import datetime
 
 
 import pathionista
-import parsinista
+from parsinista import Parsinista
 
 
 def main():
@@ -20,12 +20,13 @@ def main():
         default=None,
         help="Output file path. Defaults to timestamp + postfix."
     )
-    session_file = pathionista.get_session_file()
+    session_file_path = pathionista.get_session_file()
     args = parser.parse_args()
-    file_path = args.output_file_path
-    if file_path == None:
-        file_path = generate_filename()
-    session_data = parsinista.convert_and_save_session(session_file, file_path)
+    output_file_path = args.output_file_path
+    if output_file_path == None:
+        output_file_path = generate_filename()
+    parser = Parsinista(session_file_path, output_file_path)
+    session_data = parser.convert_and_save_session()
 
 
 def generate_filename(postfix="firefox_session", extension="json"):
