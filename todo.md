@@ -1,11 +1,11 @@
 - [X] search
 - [ ] make search fuzzy
-- [ ] filtering
-- [ ] session preview
-- [ ] vim like keyboard controls
-- [ ] marking, deleting content
-- [ ] add options to append to existing file or to overwrite it
-- [ ] hot reloading
-- [ ] make it possible to fetch session wihtout specifying everything in the world
-- [ ] choosing what windows to save
-- [ ] try using textual command palette as input for search and filtering
+- [B] filtering
+- [B] session preview
+- [B] vim like keyboard controls
+- [B] marking, deleting content
+- [A] add options to append to existing file or to overwrite it
+- [B] hot reloading
+- [A] make it possible to fetch session wihtout specifying everything in the world
+- [B] choosing what windows to save
+- [B] try using textual command palette as input for search and filtering
