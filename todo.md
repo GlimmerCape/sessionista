@@ -8,3 +8,4 @@
 - [ ] hot reloading
 - [ ] make it possible to fetch session wihtout specifying everything in the world
 - [ ] choosing what windows to save
+- [ ] try using textual command palette as input for search and filtering
