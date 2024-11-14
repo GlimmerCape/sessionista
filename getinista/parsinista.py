@@ -49,6 +49,7 @@ class Parsinista():
             raise ValueError
         with open(self.output_file, "w", encoding="utf-8") as f:
             json.dump(self.session_data, f, ensure_ascii=False, indent=2)
+        print(f"Session is saved to {self.output_file}")
 
     def convert_and_save_session(self):
         decompressed = decompress_session_file(self.input_file)

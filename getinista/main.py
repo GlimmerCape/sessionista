@@ -21,6 +21,9 @@ def main():
         help="Output file path. Defaults to timestamp + postfix."
     )
     session_file_path = pathionista.get_session_file()
+    if not session_file_path:
+        print("No session file selected")
+        return
     args = parser.parse_args()
     output_file_path = args.output_file_path
     if output_file_path == None:

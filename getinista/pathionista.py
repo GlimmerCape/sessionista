@@ -1,10 +1,26 @@
 import os
 import sys
-import glob
 import platform
 from pathlib import Path
+from dataclasses import dataclass, field
 
-def _find_firefox_profiles():
+from clinista import get_user_choice
+
+@dataclass
+class Session():
+    path: Path
+
+@dataclass
+class Profile():
+    path: Path
+    sessions: list[Session] = field(init=False)
+    session_number: int = field(init=False)
+
+    def __post_init__(self):
+        self.sessions = find_sessions(self.path)
+        self.session_number = len(self.sessions)
+
+def _find_firefox_profiles() -> list[Profile]:
     if 'microsoft' in platform.release().lower():
         # Running in WSL
         windows_username = input("Enter your Windows username: ")
@@ -23,108 +39,79 @@ def _find_firefox_profiles():
         sys.exit(1)
 
     profiles_path = Path(profiles_dir)
-    profiles = list(profiles_path.glob("*"))
+    profile_paths = list(profiles_path.glob("*"))
+    profiles = [Profile(pp) for pp in profile_paths]
     return profiles
 
-def _ask_profile(profiles):
+def choose_profile(profiles: list[Profile]) -> Profile | None:
     if not profiles:
         print("No Firefox profiles found.")
         return None
 
     print("\nAvailable Firefox Profiles:")
-    for i, profile in enumerate(profiles):
-        profile_name = os.path.basename(profile)
-        session_dir = profile / 'sessionstore-backups'
-        session_files = _find_session_files(profile)
+    options = [f"{p.path.name} | {p.session_number} sessions" for p in profiles]
+    choice = get_user_choice(options, "Select a firefox profile")
+    if choice is not None:
+        return profiles[choice]
+    return None
 
-        num_sessions = len(session_files)
-        print(f"{i + 1}: {profile_name}")
-        print(f"   Number of session files: {num_sessions}")
-    while True:
-        try:
-            choice = int(input("\nEnter the profile number (or 0 to exit): ")) - 1
-            if choice == -1:
-                print("Exiting.")
-                sys.exit(0)
-            if 0 <= choice < len(profiles):
-                return profiles[choice]
-            else:
-                print("Invalid selection, please choose a number between 1 and", len(profiles))
-        except ValueError:
-            print("Please enter a valid number.")
-
-def _find_session_files(profile_path):
+def find_sessions(profile_path: Path) -> list[Session]:
     session_store_backups = profile_path / "sessionstore-backups"
     if not session_store_backups.exists():
         return []
     
-    # Find all *.jsonlz4 files
     session_files = list(session_store_backups.glob("*.jsonlz4"))
+    sessions = [Session(fp) for fp in session_files]
     
-    # Separate current session 'recovery.jsonlz4' and others
     current_session = []
     backup_sessions = []
-    for file in session_files:
-        if file.name.startswith("recovery"):
-            current_session.append(file)
+    for session in sessions:
+        if session.path.name.startswith("recovery"):
+            current_session.append(session)
         else:
-            backup_sessions.append(file)
+            backup_sessions.append(session)
     
-    # Order: current session first, then backups
     ordered_sessions = current_session + backup_sessions
     return ordered_sessions
 
-def _ask_session_file(session_files):
+def _create_session_file_label(file: Path) -> str:
+    if file.name.startswith("recovery"):
+        return "Current Session"
+    elif file.name.startswith("previous"):
+        return "Previous Session"
+    elif file.name.startswith("upgrade"):
+        return "Upgrade Session"
+    else:
+        return "Backup Session"
+
+def choose_session(session_files: list[Session]) -> Session | None:
     if not session_files:
         print("No session files found.")
         return None
 
-    print("\nAvailable session files:")
-    for i, file in enumerate(session_files):
-        if file.name.startswith("recovery"):
-            label = "Current Session"
-        elif file.name.startswith("previous"):
-            label = "Previous Session"
-        elif file.name.startswith("upgrade"):
-            label = "Upgrade Session"
-        else:
-            label = "Backup Session"
-        print(f"{i + 1}: {file.name} ({label})")
+    session_labels = [f"{s.path.name} ({_create_session_file_label(s.path)})" for s in session_files]
+    choice = get_user_choice(session_labels, "Select a session file")
 
-    # Ask user to select a session file
-    while True:
-        try:
-            choice = int(input("\nEnter the session file number (or 0 to cancel): ")) - 1
-            if choice == -1:
-                print("Cancelled session selection.")
-                return None
-            if 0 <= choice < len(session_files):
-                selected_file = session_files[choice]
-                print(f"\nSelected session file: {selected_file}")
-                return selected_file
-            else:
-                print("Invalid selection, please choose a number between 1 and", len(session_files))
-        except ValueError:
-            print("Please enter a valid number.")
+    if choice is None:
+        return None
+    selected_session = session_files[choice]
+    print(f"\nSelected session file: {selected_session.path}")
+    return selected_session
 
 def get_session_file():
     profiles = _find_firefox_profiles()
-
     if not profiles:
         print("No Firefox profiles found.")
         return
-
-    selected_profile = _ask_profile(profiles)
+    selected_profile = choose_profile(profiles)
     if not selected_profile:
         print("No profile selected.")
         return
-
-    session_files = _find_session_files(selected_profile)
-
-    if session_files:
-        selected_session = _ask_session_file(session_files)
+    sessions = find_sessions(selected_profile.path)
+    if sessions:
+        selected_session = choose_session(sessions)
         if selected_session:
-            return selected_session
+            return selected_session.path
         else:
             print("No session file selected.")
             return None
