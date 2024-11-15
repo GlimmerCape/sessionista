@@ -17,7 +17,7 @@ class Profile():
     session_number: int = field(init=False)
 
     def __post_init__(self):
-        self.sessions = find_sessions(self.path)
+        self.sessions = _find_sessions(self.path)
         self.session_number = len(self.sessions)
 
 def _find_firefox_profiles() -> list[Profile]:
@@ -43,19 +43,18 @@ def _find_firefox_profiles() -> list[Profile]:
     profiles = [Profile(pp) for pp in profile_paths]
     return profiles
 
-def choose_profile(profiles: list[Profile]) -> Profile | None:
+def _choose_profile(profiles: list[Profile]) -> Profile | None:
     if not profiles:
         print("No Firefox profiles found.")
         return None
 
-    print("\nAvailable Firefox Profiles:")
     options = [f"{p.path.name} | {p.session_number} sessions" for p in profiles]
     choice = get_user_choice(options, "Select a firefox profile")
     if choice is not None:
         return profiles[choice]
     return None
 
-def find_sessions(profile_path: Path) -> list[Session]:
+def _find_sessions(profile_path: Path) -> list[Session]:
     session_store_backups = profile_path / "sessionstore-backups"
     if not session_store_backups.exists():
         return []
@@ -84,7 +83,7 @@ def _create_session_file_label(file: Path) -> str:
     else:
         return "Backup Session"
 
-def choose_session(session_files: list[Session]) -> Session | None:
+def _choose_session(session_files: list[Session]) -> Session | None:
     if not session_files:
         print("No session files found.")
         return None
@@ -103,13 +102,13 @@ def get_session_file():
     if not profiles:
         print("No Firefox profiles found.")
         return
-    selected_profile = choose_profile(profiles)
+    selected_profile = _choose_profile(profiles)
     if not selected_profile:
         print("No profile selected.")
         return
-    sessions = find_sessions(selected_profile.path)
+    sessions = _find_sessions(selected_profile.path)
     if sessions:
-        selected_session = choose_session(sessions)
+        selected_session = _choose_session(sessions)
         if selected_session:
             return selected_session.path
         else:
