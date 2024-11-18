@@ -1,4 +1,4 @@
-- [X] search
+- [x] search
 - [ ] make search fuzzy
 - [B] filtering
 - [B] session preview
@@ -6,6 +6,7 @@
 - [B] marking, deleting content
 - [A] add options to append to existing file or to overwrite it
 - [B] hot reloading
-- [A] make it possible to fetch session wihtout specifying everything in the world
+- [x] make it possible to fetch session wihtout specifying everything in the world - not possible.
+  - [ ] Partially implement by letting user to specify regexes for profile and session
 - [B] choosing what windows to save
 - [B] try using textual command palette as input for search and filtering
