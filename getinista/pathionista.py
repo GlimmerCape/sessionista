@@ -43,17 +43,6 @@ def _find_firefox_profiles() -> list[Profile]:
     profiles = [Profile(pp) for pp in profile_paths]
     return profiles
 
-def _choose_profile(profiles: list[Profile]) -> Profile | None:
-    if not profiles:
-        print("No Firefox profiles found.")
-        return None
-
-    options = [f"{p.path.name} | {p.session_number} sessions" for p in profiles]
-    choice = get_user_choice(options, "Select a firefox profile")
-    if choice is not None:
-        return profiles[choice]
-    return None
-
 def _find_sessions(profile_path: Path) -> list[Session]:
     session_store_backups = profile_path / "sessionstore-backups"
     if not session_store_backups.exists():
@@ -83,37 +72,27 @@ def _create_session_file_label(file: Path) -> str:
     else:
         return "Backup Session"
 
-def _choose_session(session_files: list[Session]) -> Session | None:
-    if not session_files:
-        print("No session files found.")
-        return None
-
-    session_labels = [f"{s.path.name} ({_create_session_file_label(s.path)})" for s in session_files]
-    choice = get_user_choice(session_labels, "Select a session file")
-
-    if choice is None:
-        return None
-    selected_session = session_files[choice]
-    print(f"\nSelected session file: {selected_session.path}")
-    return selected_session
-
 def get_session_file():
     profiles = _find_firefox_profiles()
-    if not profiles:
-        print("No Firefox profiles found.")
-        return
-    selected_profile = _choose_profile(profiles)
-    if not selected_profile:
-        print("No profile selected.")
-        return
+    profile_idx = get_user_choice([f"{p.path.name} | {p.session_number} sessions" for p in profiles], "profile")
+
+    if profile_idx is None: return None
+    selected_profile = profiles[profile_idx]
+
     sessions = _find_sessions(selected_profile.path)
-    if sessions:
-        selected_session = _choose_session(sessions)
-        if selected_session:
-            return selected_session.path
-        else:
-            print("No session file selected.")
-            return None
-    else:
-        print("No session files found in the selected profile.")
-        return None
+    session_idx = get_user_choice([f"{s.path.name} ({_create_session_file_label(s.path)})" for s in sessions], "session")
+
+    if session_idx is None: return None
+    selected_session = sessions[session_idx]
+
+    return selected_session.path
+
+if __name__ == "__main__":
+    # parser = argparse.ArgumentParser(description="Find and select Firefox profile and session.")
+    # parser.add_argument("--profile-regex", help="Regex to filter Firefox profiles", type=str, default=None)
+    # parser.add_argument("--session-regex", help="Regex to filter session files", type=str, default=None)
+    # args = parser.parse_args()
+
+    session_file = get_session_file()
+    if session_file:
+        print(f"Session file path: {session_file}")

@@ -1,9 +1,9 @@
-def get_user_choice(options: list[str], prompt: str) -> int | None:
+def get_user_choice(options: list[str], item_name: str) -> int | None:
     if not options:
-        print(f"{prompt}. No options available to choose from")
+        print(f"Not a single {item_name} to choose from")
         return None
 
-    print(f"\n{prompt}")
+    print(f"\nSelect a/an {item_name}")
     for i, option in enumerate(options, start=1):
         print(f"{i}: {option}")
 

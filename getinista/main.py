@@ -29,7 +29,7 @@ def main():
     if output_file_path == None:
         output_file_path = generate_filename()
     parser = Parsinista(session_file_path, output_file_path)
-    session_data = parser.convert_and_save_session()
+    parser.convert_and_save_session()
 
 
 def generate_filename(postfix="firefox_session", extension="json"):
