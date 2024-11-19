@@ -43,9 +43,6 @@ def _find_firefox_profiles(pattern: str='.*') -> list[Profile]:
     profile_paths = list(profiles_path.glob("*"))
 
     compiled_pattern = re.compile(pattern)
-    print(pattern)
-    for p in profile_paths:
-        print(str(p))
     profiles = [Profile(pp) for pp in profile_paths if compiled_pattern.match(str(pp))]
     return profiles
 
