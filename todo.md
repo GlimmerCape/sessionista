@@ -7,6 +7,6 @@
 - [A] add options to append to existing file or to overwrite it
 - [B] hot reloading
 - [x] make it possible to fetch session wihtout specifying everything in the world - not possible.
-  - [ ] Partially implement by letting user to specify regexes for profile and session
+  - [x] Partially implement by letting user to specify regexes for profile and session
 - [B] choosing what windows to save
 - [B] try using textual command palette as input for search and filtering
