@@ -1,3 +1,11 @@
+from typing import Callable
+
+def ask_for_valid_input(prompt: str, validate_func: Callable[[str], bool]) -> str:
+    while True:
+        user_input = input(prompt)
+        if validate_func(user_input):
+            return user_input
+
 def get_user_choice(options: list[str], item_name: str) -> int | None:
     if not options:
         print(f"Not a single {item_name} to choose from")
@@ -11,17 +19,21 @@ def get_user_choice(options: list[str], item_name: str) -> int | None:
     for i, option in enumerate(options, start=1):
         print(f"{i}: {option}")
 
-    while True:
+    def validate_choice_from_list(value: str) -> bool:
         try:
-            choice = int(input(f"Enter the number or 0 to cancel: "))
-            if choice == 0:
-                print("Operation cancelled by the user.")
-                return None
-            if 1 <= choice <= len(options):
-                return choice - 1
-            else:
-                print(
-                    f"Please enter a number between 1 and {len(options)}, or 0 to cancel."
-                )
+            choice = int(value)
         except ValueError:
             print("Invalid input. Please enter a valid number.")
+            return False
+        if choice < 0 or len(options) < choice:
+            print(f"Please enter a number between 1 and {len(options)}, or 0 to cancel.")
+            return False
+        return True
+
+    choice = int(ask_for_valid_input("Enter the number or 0 to cancel: ", validate_choice_from_list))
+
+    if choice == 0:
+        print("Operation cancelled by the user.")
+        return None
+    return choice - 1
+
