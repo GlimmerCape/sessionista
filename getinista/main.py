@@ -34,10 +34,8 @@ def main():
         help="Output file path. Defaults to timestamp + postfix."
     )
     args = parser.parse_args()
-    profile_pattern = args.profile_pattern if args.raw_patterns else add_wildcards_to_pattern(args.profile_pattern)
-    session_pattern = args.session_pattern if args.raw_patterns else add_wildcards_to_pattern(args.session_pattern)
 
-    session_file_path = pathionista.get_session_file(profile_pattern=profile_pattern, session_pattern=session_pattern)
+    session_file_path = pathionista.get_session_file(args.profile_pattern, args.session_pattern, args.raw_patterns)
     if not session_file_path:
         print("No session file selected")
         return
@@ -56,9 +54,6 @@ def generate_filename(postfix="firefox_session", extension="json"):
     # Construct the filename
     filename = f"{timestamp}_{postfix}.{extension}"
     return filename
-
-def add_wildcards_to_pattern(pattern: str) -> str:
-    return PYTHON_WILDCARD + pattern + PYTHON_WILDCARD    
 
 if __name__ == "__main__":
     main()

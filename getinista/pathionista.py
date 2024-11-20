@@ -5,6 +5,7 @@ import re
 from pathlib import Path
 from dataclasses import dataclass, field
 
+from constants import PYTHON_WILDCARD
 from clinista import get_user_choice
 
 @dataclass
@@ -21,7 +22,9 @@ class Profile():
         self.sessions = _find_sessions(self.path)
         self.session_number = len(self.sessions)
 
-def _find_firefox_profiles(pattern: str='.*') -> list[Profile]:
+def _find_firefox_profiles(pattern: str='.*', raw_patterns=False) -> list[Profile]:
+    if pattern != ".*" and not raw_patterns:
+        pattern = add_wildcards_to_pattern(pattern)
     if 'microsoft' in platform.release().lower():
         # Running in WSL
         windows_username = input("Enter your Windows username: ")
@@ -46,7 +49,9 @@ def _find_firefox_profiles(pattern: str='.*') -> list[Profile]:
     profiles = [Profile(pp) for pp in profile_paths if compiled_pattern.match(str(pp))]
     return profiles
 
-def _find_sessions(profile_path: Path, pattern: str='.*') -> list[Session]:
+def _find_sessions(profile_path: Path, pattern: str='.*', raw_patterns=False) -> list[Session]:
+    if pattern != ".*" and not raw_patterns:
+        pattern = add_wildcards_to_pattern(pattern)
     session_store_backups = profile_path / "sessionstore-backups"
     if not session_store_backups.exists():
         return []
@@ -76,14 +81,14 @@ def _create_session_file_label(file: Path) -> str:
     else:
         return "Backup Session"
 
-def get_session_file(profile_pattern: str=".*", session_pattern: str=".*") -> Path | None:
-    profiles = _find_firefox_profiles(profile_pattern)
+def get_session_file(profile_pattern: str=".*", session_pattern: str=".*", raw_patterns=False) -> Path | None:
+    profiles = _find_firefox_profiles(profile_pattern, raw_patterns)
     profile_idx = get_user_choice([f"{p.path.name} | {p.session_number} sessions" for p in profiles], "profile")
 
     if profile_idx is None: return None
     selected_profile = profiles[profile_idx]
 
-    sessions = _find_sessions(selected_profile.path, session_pattern)
+    sessions = _find_sessions(selected_profile.path, session_pattern, raw_patterns)
     session_idx = get_user_choice([f"{s.path.name} ({_create_session_file_label(s.path)})" for s in sessions], "session")
 
     if session_idx is None: return None
@@ -91,11 +96,14 @@ def get_session_file(profile_pattern: str=".*", session_pattern: str=".*") -> Pa
 
     return selected_session.path
 
+def add_wildcards_to_pattern(pattern: str) -> str:
+    return PYTHON_WILDCARD + pattern + PYTHON_WILDCARD    
+
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description="Find and select Firefox profile and session.")
-    parser.add_argument("--profile-regex", help="Regex to filter Firefox profiles", type=str, default=None)
-    parser.add_argument("--session-regex", help="Regex to filter session files", type=str, default=None)
+    parser.add_argument("-p", "--profile-regex", help="Regex to filter Firefox profiles", type=str, default=".*")
+    parser.add_argument("-s", "--session-regex", help="Regex to filter session files", type=str, default=".*")
     args = parser.parse_args()
 
     session_file = get_session_file(profile_pattern=args.profile_regex, session_pattern=args.session_regex)
