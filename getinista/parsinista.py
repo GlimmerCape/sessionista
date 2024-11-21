@@ -1,8 +1,11 @@
 import os
 import json
+from typing import Callable
 import lz4.block
 
-MAGIC_NUMBER = b"mozLz40\0"  # it's not a number, but if you think about it hard enough it is
+from clinista import ask_for_valid_input
+
+MAGIC_NUMBER = b"mozLz40\0"  # it's not a number
 
 
 def decompress_session_file(file_path: str) -> dict:
@@ -14,7 +17,27 @@ def decompress_session_file(file_path: str) -> dict:
         session = json.loads(json_data)
         return session
 
-def simplify_session_data(session):
+def is_valid_yn_answer(user_input: str) -> bool:
+    if user_input == 'y' or user_input == 'n':
+        return True
+    print("Invalid input. Expected either 'y' or 'n'")
+    return False
+
+def pick_windows(data: list[dict]) -> None:
+    idx = 0
+    while idx < len(data):
+        print("Save this window? First 5 tabs:")
+        for tab in data[idx]['tabs'][-5:]:
+            print(f"    title: {tab[-1]['title']}")
+            print(f"    url: {tab[-1]['url']}")
+        user_input = ask_for_valid_input("y/n:", is_valid_yn_answer)
+        if user_input == 'y':
+            idx += 1
+        else:
+            print('Not saving the window above')
+            data.pop(idx)
+
+def process_session_data(session, post_process_func: Callable[[list[dict]], None] | None=None) -> list[dict]:
     simplified_data = []
     for window_idx, window in enumerate(session.get("windows", []), start=1):
         window_data = {"tabs": []}
@@ -29,6 +52,8 @@ def simplify_session_data(session):
                 })
             window_data["tabs"].append(entries)
         simplified_data.append(window_data)
+    if post_process_func:
+        post_process_func(simplified_data)
     return simplified_data
 
 class FileExistsError(Exception):
@@ -51,7 +76,36 @@ class Parsinista():
             json.dump(self.session_data, f, ensure_ascii=False, indent=2)
         print(f"Session is saved to {self.output_file}")
 
-    def convert_and_save_session(self):
+    def convert_and_save_session(self, choose_windows_to_save: bool=False):
         decompressed = decompress_session_file(self.input_file)
-        self.session_data = simplify_session_data(decompressed)
+        post_process_func = pick_windows if choose_windows_to_save else None
+        self.session_data = process_session_data(decompressed, post_process_func)
         self.save_simplified_session()
+
+if __name__ == "__main__":
+    data = [
+        {
+            "tabs": [
+                {"title": "first", "url": "first_url"},
+                {"title": "second", "url": "second_url"},
+                {"title": "third", "url": "third_url"},
+            ]
+        },
+        {
+            "tabs": [
+                {"title": "1", "url": "first_url"},
+                {"title": "2", "url": "second_url"},
+                {"title": "3", "url": "third_url"},
+            ]
+        },
+        {
+            "tabs": [
+                {"title": "___", "url": "first_url"},
+                {"title": "___", "url": "second_url"},
+                {"title": "___", "url": "third_url"},
+            ]
+        },
+    ]
+    print(data)
+    pick_windows(data)
+    print(data)
