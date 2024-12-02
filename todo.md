@@ -1,4 +1,5 @@
 - [A] add options to append to existing file or to overwrite it
+ - [ ] don't like the idea of modifying existing files anyhow, add the option to 'merge' multiple files through metadata
 - [B] filtering
 - [B] session preview
 - [B] vim like keyboard controls
@@ -6,6 +7,7 @@
 - [B] hot reloading
 - [B] try using textual command palette as input for search and filtering
 - [ ] make search fuzzy
+- [A] try to make tui usage more spontaneous?
 
 Completed:
 - [x] search
