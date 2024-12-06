@@ -4,15 +4,18 @@ from textual.app import App, ComposeResult
 from textual.binding import Binding
 
 from .json_tree_view import JsonTreeView
+from .input_bar import CenteredInputBar
 
 
 class JsonTreeApp(App):
     BINDINGS = [
         Binding("q", "quit", "Quit"),
+        Binding("/", "focus_on_search_input", "Search Input"),
+        Binding(':', 'open_input', 'Enter Command Mode'),
+        Binding("enter", 'search', "Search"),
+        # Movement
         Binding("l", "expand_current_node", "Expand Node"),
         Binding("h", "collapse_current_node", "Collapse Node"),
-        Binding("/", "focus_on_search_input", "Search Input"),
-        Binding("enter", 'search', "Search"),
         Binding("n", "next_match", "Next Match"),
         Binding("N", "previous_match", "Previous Match"),
         Binding("k", "move_up", "Move Down"),
@@ -24,8 +27,14 @@ class JsonTreeApp(App):
         self.JSON_PATH = json_path
 
     def compose(self) -> ComposeResult:
+        self.input = CenteredInputBar()
         self.tree_view = JsonTreeView(self.JSON_PATH)
+        yield self.input
         yield self.tree_view
+
+    def action_open_input(self) -> None:
+        self.notify('aaah')
+        self.input.open_input()
 
     def action_expand_current_node(self) -> None:
         if not self.tree_view.cursor_node: return
