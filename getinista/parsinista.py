@@ -37,10 +37,12 @@ def pick_windows(data: list[dict]) -> None:
             print('Not saving the window above')
             data.pop(idx)
 
-def process_session_data(session, post_process_func: Callable[[list[dict]], None] | None=None) -> list[dict]:
+def process_session_data(session, post_process_func: Callable[[list[dict]], None] | None=None) -> tuple[list[dict], list[int]]:
     simplified_data = []
+    windows_metadata = []
     for window_idx, window in enumerate(session.get("windows", []), start=1):
         window_data = {"tabs": []}
+        tab_count = 0
         for tab_idx, tab in enumerate(window.get("tabs", []), start=1):
             entries = []
             for entry_idx, entry in enumerate(tab.get("entries", []), start=1):
@@ -51,17 +53,19 @@ def process_session_data(session, post_process_func: Callable[[list[dict]], None
                     "url": entry.get("url", "")
                 })
             window_data["tabs"].append(entries)
+            tab_count += 1
         simplified_data.append(window_data)
+        windows_metadata.append(tab_count)
     if post_process_func:
         post_process_func(simplified_data)
-    return simplified_data
+    return simplified_data, windows_metadata
 
 class FileExistsError(Exception):
     def __init__(self, message="File already exists. Please choose a different path"):
         self.message = message
         super().__init__(self.message)
 
-class Parsinista():
+class Parsinista:
     def __init__(self, input_file, output_file):
         self.input_file = input_file
         self.output_file = output_file
@@ -72,6 +76,8 @@ class Parsinista():
             raise FileExistsError
         if not self.session_data:
             raise ValueError
+        for tab_count in self.windows_metadata:
+            print(f"Window with {tab_count} tabs")
         with open(self.output_file, "w", encoding="utf-8") as f:
             json.dump(self.session_data, f, ensure_ascii=False, indent=2)
         print(f"Session is saved to {self.output_file}")
@@ -79,7 +85,7 @@ class Parsinista():
     def convert_and_save_session(self, choose_windows_to_save: bool=False):
         decompressed = decompress_session_file(self.input_file)
         post_process_func = pick_windows if choose_windows_to_save else None
-        self.session_data = process_session_data(decompressed, post_process_func)
+        self.session_data, self.windows_metadata = process_session_data(decompressed, post_process_func)
         self.save_simplified_session()
 
 if __name__ == "__main__":
@@ -109,3 +115,4 @@ if __name__ == "__main__":
     print(data)
     pick_windows(data)
     print(data)
+
