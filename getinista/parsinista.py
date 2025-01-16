@@ -40,7 +40,8 @@ def pick_windows(data: list[dict]) -> None:
 def process_session_data(session, post_process_func: Callable[[list[dict]], None] | None=None) -> list[dict]:
     simplified_data = []
     for window_idx, window in enumerate(session.get("windows", []), start=1):
-        window_data = {"tabs": []}
+        window_data = {"tabs": [], "tab_count": 0}
+        tab_count = 0
         for tab_idx, tab in enumerate(window.get("tabs", []), start=1):
             entries = []
             for entry_idx, entry in enumerate(tab.get("entries", []), start=1):
@@ -51,6 +52,8 @@ def process_session_data(session, post_process_func: Callable[[list[dict]], None
                     "url": entry.get("url", "")
                 })
             window_data["tabs"].append(entries)
+            tab_count += 1
+        window_data["tab_count"] = tab_count
         simplified_data.append(window_data)
     if post_process_func:
         post_process_func(simplified_data)
@@ -72,6 +75,8 @@ class Parsinista():
             raise FileExistsError
         if not self.session_data:
             raise ValueError
+        for window in self.session_data:
+            print("Window with " + str(window["tab_count"]) + " tabs")
         with open(self.output_file, "w", encoding="utf-8") as f:
             json.dump(self.session_data, f, ensure_ascii=False, indent=2)
         print(f"Session is saved to {self.output_file}")
