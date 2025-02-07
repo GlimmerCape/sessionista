@@ -8,6 +8,18 @@ from dataclasses import dataclass, field
 from constants import PYTHON_WILDCARD
 from clinista import get_user_choice
 
+class SessionistaError(Exception):
+    """
+    Base exception class for Sessionista.
+
+    All Sessionista specific exceptions are supposed to be subclasses of this class.
+    """
+
+class ProfileDirNotFound(SessionistaError):
+    """
+    Self explanatory.
+    """
+
 @dataclass
 class Session():
     path: Path
@@ -22,9 +34,7 @@ class Profile():
         self.sessions = _find_sessions(self.path)
         self.session_number = len(self.sessions)
 
-def _find_firefox_profiles(pattern: str='.*', raw_patterns=False) -> list[Profile]:
-    if pattern != ".*" and not raw_patterns:
-        pattern = add_wildcards_to_pattern(pattern)
+def get_path_to_profiles_dir() -> str:
     if 'microsoft' in platform.release().lower():
         # Running in WSL
         windows_username = input("Enter your Windows username: ")
@@ -41,13 +51,31 @@ def _find_firefox_profiles(pattern: str='.*', raw_patterns=False) -> list[Profil
     if not os.path.exists(profiles_dir):
         print(f"Firefox profiles directory not found at: {profiles_dir}")
         sys.exit(1)
+    return profiles_dir
 
-    profiles_path = Path(profiles_dir)
-    profile_paths = list(profiles_path.glob("*"))
+class Profiler:
+    """Class for getting profiles"""
+    def __init__(self, profiles_dir: str) -> None:
+        """"""
+        self.profiles_dir = profiles_dir
 
-    compiled_pattern = re.compile(pattern)
-    profiles = [Profile(pp) for pp in profile_paths if compiled_pattern.match(str(pp))]
-    return profiles
+    def get_profiles(self, pattern: str='.*', raw_patterns=False) -> list[Profile]:
+        if pattern != ".*" and not raw_patterns:
+            pattern = PYTHON_WILDCARD + pattern + PYTHON_WILDCARD
+        profiles_path = Path(self.profiles_dir)
+        profile_paths = list(profiles_path.glob("*"))
+
+        compiled_pattern = re.compile(pattern)
+        profiles = [Profile(pp) for pp in profile_paths if compiled_pattern.match(str(pp))]
+        return profiles
+
+class Sessionizer:
+    """Class for getting sessions"""
+    def __init__(self, profile_path: str) -> None:
+        self.profile_path = profile_path
+
+    def get_sessions(self, pattern: str, raw_patterns):
+
 
 def _find_sessions(profile_path: Path, pattern: str='.*', raw_patterns=False) -> list[Session]:
     if pattern != ".*" and not raw_patterns:
@@ -95,9 +123,6 @@ def get_session_file(profile_pattern: str=".*", session_pattern: str=".*", raw_p
     selected_session = sessions[session_idx]
 
     return selected_session.path
-
-def add_wildcards_to_pattern(pattern: str) -> str:
-    return PYTHON_WILDCARD + pattern + PYTHON_WILDCARD    
 
 if __name__ == "__main__":
     import argparse
