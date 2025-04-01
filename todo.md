@@ -14,3 +14,10 @@ Completed:
 - [x] make it possible to fetch session wihtout specifying everything in the world - not possible.
   - [x] Partially implement by letting user to specify regexes for profile and session
 - [x] choosing what windows to save
+
+What I want:
+GUI that takes session provided by getinista
+Display it nicely in TUI treeview(convert into nicer format and back???)
+Basic extendable treeviewer for this format(collapsing, search, filtering)
+Extension for picking the windows and tabs to save
+Extension for tagging windows and tabs
