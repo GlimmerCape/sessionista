@@ -26,7 +26,7 @@ def is_valid_yn_answer(user_input: str) -> bool:
 def pick_windows(data: list[dict]) -> None:
     idx = 0
     while idx < len(data):
-        print("Save this window? First 5 tabs:")
+        print("Save this window? 5 tabs from the window(chosen randomly(actually not)):")
         for tab in data[idx]['tabs'][-5:]:
             print(f"    title: {tab[-1]['title']}")
             print(f"    url: {tab[-1]['url']}")
